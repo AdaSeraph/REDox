@@ -1,8 +1,12 @@
-﻿# RE:Dox
+# RE:Dox
 
 [![Build and Test](https://github.com/CAPCOM-TD-OSS/REDox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CAPCOM-TD-OSS/REDox/actions/workflows/ci.yml)
+[![C++ Build (LIB & DLL)](https://github.com/AdaSeraph/REDox/actions/workflows/cpp-build.yml/badge.svg?branch=main)](https://github.com/AdaSeraph/REDox/actions/workflows/cpp-build.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/AdaSeraph/REDox?label=C%2B%2B%20Release)](https://github.com/AdaSeraph/REDox/releases)
 [![NuGet](https://img.shields.io/nuget/v/CAPCOM.REDox.svg)](https://www.nuget.org/packages/CAPCOM.REDox)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+> **C++20 Native Port (`REDoxCpp`)**: This fork includes a zero-dependency native **C++20** port under [`cpp/`](cpp/) supporting static (`.lib` / `.a`) and shared (`.dll` / `.so`) builds. See [C++20 Native Port (`REDoxCpp`)](#c20-native-port-redoxcpp) below for usage, prebuilt Releases, and GitHub Packages.
 
 ## 1. What is RE:Dox?
 
@@ -532,6 +536,78 @@ Benchmarks use BenchmarkDotNet and must be run in `Release` configuration.
 ```powershell
 dotnet run -c Release --project benchmarks/REDox.Json.Benchmarks
 ```
+
+---
+
+## C++20 Native Port (`REDoxCpp`)
+
+A zero-dependency native **C++20** port lives under [`cpp/`](cpp/), preserving RE:Dox's 64-bit dual-mode `DToken` IR, lazy source-backed decoding, mutable tape DOM (`DObject` / `DArray` / `DMap`), trivia-preserving JSON5 editing, DOX v1.0 wire compatibility, and cross-format conversion (**JSON, JSON5, DOX, CBOR, MessagePack, INI**).
+
+### Quick example (C++20)
+
+```cpp
+#include <redox/redox.hpp>
+
+auto doc = redox::JsonDocument::parse(R"({"Name":"Leon","Level":42,"Items":["Handgun","Green Herb"]})");
+auto& root = doc->root_element().as_object();
+root.set("Name", "Claire");
+root.add("Hp", 100);
+root.remove("Level");
+
+auto& items = root["Items"].as_array();
+items.add("First Aid Spray");
+items.insert(0, "Knife");
+items.remove_at(1);
+
+std::string json   = doc->root_element().to_json_string();
+auto dox_bytes     = doc->root_element().to_dox();
+auto cbor_bytes    = doc->root_element().to_cbor();
+auto msgpack_bytes = doc->root_element().to_messagepack();
+```
+
+### Download Prebuilt Binaries (GitHub Releases)
+
+Prebuilt archives with headers, static libraries, and shared libraries are published on [GitHub Releases](https://github.com/AdaSeraph/REDox/releases):
+
+* **`REDoxCpp-<version>-windows-x64.zip`**: `include/redox/*.hpp`, `static/REDoxCpp.lib`, `shared/REDoxCpp.dll`, `shared/REDoxCpp.lib`
+* **`REDoxCpp-<version>-linux-x64.tar.gz`**: `include/redox/*.hpp`, `static/libREDoxCpp.a`, `shared/libREDoxCpp.so`
+
+### Install via GitHub Packages (MSVC Native NuGet)
+
+Windows Visual Studio C++ projects can install `REDoxCpp.Native` directly from GitHub Packages:
+
+1. Add the package source:
+   ```powershell
+   dotnet nuget add source "https://nuget.pkg.github.com/AdaSeraph/index.json" --name github
+   ```
+2. Install `REDoxCpp.Native` in your `.vcxproj`. By default it links statically against `REDoxCpp.lib`; to link dynamically against `REDoxCpp.dll`, set `<REDoxCppLinkage>shared</REDoxCppLinkage>` in your `.vcxproj`.
+
+### Build from Source (CMake)
+
+```bash
+# Static library (REDoxCpp.lib / libREDoxCpp.a)
+cmake -S cpp -B cpp/build-static -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+cmake --build cpp/build-static --config Release
+ctest --test-dir cpp/build-static -C Release --output-on-failure
+
+# Shared library (REDoxCpp.dll + import .lib / libREDoxCpp.so)
+cmake -S cpp -B cpp/build-shared -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+cmake --build cpp/build-shared --config Release
+ctest --test-dir cpp/build-shared -C Release --output-on-failure
+```
+
+### Publishing a New C++ Release
+
+Push a `cpp-v*` tag or manually trigger the [**Release C++ Library & Publish Packages**](.github/workflows/cpp-release.yml) workflow:
+
+```bash
+git tag cpp-v1.0.3
+git push origin cpp-v1.0.3
+```
+
+This automatically builds & tests Windows x64 (`.lib`/`.dll`) and Linux x64 (`.a`/`.so`), publishes the **GitHub Release** with `SHA256SUMS.txt`, and pushes `REDoxCpp.Native` to **GitHub Packages**.
+
+---
 
 ## Third-party components
 

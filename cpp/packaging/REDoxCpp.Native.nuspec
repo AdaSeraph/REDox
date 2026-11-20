@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>REDoxCpp.Native</id>
+    <version>$version$</version>
+    <authors>CAPCOM CO.,LTD., AdaSeraph</authors>
+    <license type="expression">Apache-2.0</license>
+    <projectUrl>https://github.com/$owner$/REDox</projectUrl>
+    <repository type="git" url="https://github.com/$owner$/REDox.git" />
+    <description>Native C++20 port of RE:Dox (64-bit Token DOM, JSON, JSON5 with trivia preservation, DOX v1.0, CBOR, MessagePack, INI) with Windows x64 static (.lib) and shared (.dll) libraries.</description>
+    <tags>native cpp c++20 redox json json5 cbor messagepack dox</tags>
+  </metadata>
+  <files>
+    <file src="REDoxCpp.Native.targets" target="build\native\REDoxCpp.Native.targets" />
+    <file src="..\..\include\redox\*.hpp" target="build\native\include\redox" />
+    <file src="..\..\dist\windows-x64\static\REDoxCpp.lib" target="build\native\lib\x64\static" />
+    <file src="..\..\dist\windows-x64\shared\REDoxCpp.lib" target="build\native\lib\x64\shared" />
+    <file src="..\..\dist\windows-x64\shared\REDoxCpp.dll" target="build\native\bin\x64" />
+    <file src="..\..\..\LICENSE" target="" />
+  </files>
+</package>
