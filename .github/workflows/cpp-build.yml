@@ -1,0 +1,95 @@
+name: Build C++ Library (LIB & DLL)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cpp/**'
+      - '.github/workflows/cpp-build.yml'
+  pull_request:
+    paths:
+      - 'cpp/**'
+      - '.github/workflows/cpp-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cpp-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Windows x64 (MSVC .lib & .dll)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure & Build Static (.lib)
+        shell: pwsh
+        run: |
+          cmake -S cpp -B cpp/build-static -A x64 -DBUILD_SHARED_LIBS=OFF
+          cmake --build cpp/build-static --config Release --parallel
+          ctest --test-dir cpp/build-static -C Release --output-on-failure
+
+      - name: Configure & Build Shared (.dll + import .lib)
+        shell: pwsh
+        run: |
+          cmake -S cpp -B cpp/build-shared -A x64 -DBUILD_SHARED_LIBS=ON
+          cmake --build cpp/build-shared --config Release --parallel
+          ctest --test-dir cpp/build-shared -C Release --output-on-failure
+
+      - name: Stage Windows Artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/windows-x64/include/redox | Out-Null
+          New-Item -ItemType Directory -Force -Path dist/windows-x64/static | Out-Null
+          New-Item -ItemType Directory -Force -Path dist/windows-x64/shared | Out-Null
+
+          Copy-Item cpp/include/redox/*.hpp dist/windows-x64/include/redox/
+          Copy-Item cpp/build-static/lib/Release/REDoxCpp.lib dist/windows-x64/static/
+          Copy-Item cpp/build-shared/bin/Release/REDoxCpp.dll dist/windows-x64/shared/
+          Copy-Item cpp/build-shared/lib/Release/REDoxCpp.lib dist/windows-x64/shared/
+
+          Get-ChildItem -Recurse dist/windows-x64
+
+      - name: Upload Windows LIB & DLL Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: REDoxCpp-windows-x64
+          path: dist/windows-x64/
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux x64 (GCC .a & .so)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure & Build Static (.a)
+        run: |
+          cmake -S cpp -B cpp/build-static -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+          cmake --build cpp/build-static --parallel
+          ctest --test-dir cpp/build-static --output-on-failure
+
+      - name: Configure & Build Shared (.so)
+        run: |
+          cmake -S cpp -B cpp/build-shared -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+          cmake --build cpp/build-shared --parallel
+          ctest --test-dir cpp/build-shared --output-on-failure
+
+      - name: Stage Linux Artifacts
+        run: |
+          mkdir -p dist/linux-x64/include/redox dist/linux-x64/static dist/linux-x64/shared
+          cp cpp/include/redox/*.hpp dist/linux-x64/include/redox/
+          cp cpp/build-static/lib/libREDoxCpp.a dist/linux-x64/static/
+          cp cpp/build-shared/lib/libREDoxCpp.so dist/linux-x64/shared/
+          ls -lhR dist/linux-x64
+
+      - name: Upload Linux Static & Shared Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: REDoxCpp-linux-x64
+          path: dist/linux-x64/
+          if-no-files-found: error
