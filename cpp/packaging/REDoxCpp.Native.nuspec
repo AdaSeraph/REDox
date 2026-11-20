@@ -12,10 +12,10 @@
   </metadata>
   <files>
     <file src="REDoxCpp.Native.targets" target="build\native\REDoxCpp.Native.targets" />
-    <file src="..\..\include\redox\*.hpp" target="build\native\include\redox" />
-    <file src="..\..\dist\windows-x64\static\REDoxCpp.lib" target="build\native\lib\x64\static" />
-    <file src="..\..\dist\windows-x64\shared\REDoxCpp.lib" target="build\native\lib\x64\shared" />
-    <file src="..\..\dist\windows-x64\shared\REDoxCpp.dll" target="build\native\bin\x64" />
-    <file src="..\..\..\LICENSE" target="" />
+    <file src="..\include\redox\*.hpp" target="build\native\include\redox" />
+    <file src="..\dist\windows-x64\static\REDoxCpp.lib" target="build\native\lib\x64\static" />
+    <file src="..\dist\windows-x64\shared\REDoxCpp.lib" target="build\native\lib\x64\shared" />
+    <file src="..\dist\windows-x64\shared\REDoxCpp.dll" target="build\native\bin\x64" />
+    <file src="..\..\LICENSE" target="" />
   </files>
 </package>
